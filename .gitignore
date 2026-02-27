@@ -1,0 +1,102 @@
+# ─── Python ───────────────────────────────────────────────
+*.py[cod]          # .pyc, .pyo, .pyd
+*$py.class
+*.pyw
+
+# ─── Bytecode / Cache ─────────────────────────────────────
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+*.pyo
+
+# ─── Virtual Environments ─────────────────────────────────
+venv/
+venv/
+.venv/
+env/
+.env/
+ENV/
+env.bak/
+venv.bak/
+.virtualenv/
+
+# ─── Distribution / Packaging ─────────────────────────────
+dist/
+build/
+*.egg-info/
+*.egg
+.eggs/
+MANIFEST
+
+# ─── Unit Test / Coverage ─────────────────────────────────
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+nosetests.xml
+.hypothesis/
+
+# ─── Jupyter / IPython ────────────────────────────────────
+.ipynb_checkpoints/
+*.ipynb
+
+# ─── Environment Variables / Secrets ──────────────────────
+.env
+.env.*
+*.env
+!.env.example
+secrets.json
+config.local.*
+
+# ─── ML / AI Artifacts ────────────────────────────────────
+# Uncomment the lines below if you don't want to track model weights
+# *.pt
+# *.pth
+# *.onnx
+# *.h5
+# *.pkl
+# *.pickle
+runs/           # YOLO training runs
+weights/
+checkpoints/
+*.log
+
+# ─── OpenCV / Media Temp Files ────────────────────────────
+*.avi
+*.mp4
+*.mov
+# Keep demo images but ignore bulk output/capture folders
+output/
+captures/
+frames/
+
+# ─── IDEs & Editors ───────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ─── OS Files ─────────────────────────────────────────────
+desktop.ini
+ehthumbs.db
+Icon?
+._*
+
+# ─── Logs & Databases ─────────────────────────────────────
+*.log
+*.db
+*.sqlite3
+logs/
+
+# ─── Misc ─────────────────────────────────────────────────
+*.bak
+*.tmp
+*.orig
+.cache/
