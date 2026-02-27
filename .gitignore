@@ -7,3 +7,5 @@ venv/
 # YOLO model weights
 yolov8n.pt
 yolov8n-seg.pt
+
+__pycache__/
