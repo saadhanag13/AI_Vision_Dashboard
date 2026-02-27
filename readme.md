@@ -39,6 +39,12 @@
 
 ## How to Run
 
+### Clone the repository
+
+```bash
+git clone https://github.com/saadhanag13/AI_Vision_Dashboard.git
+```
+
 ### Create Virtual Environment (First Time Only)
 
 ```bash
