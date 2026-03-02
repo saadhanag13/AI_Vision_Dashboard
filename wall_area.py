@@ -1,6 +1,7 @@
-# counts the area of the wall - issues raised
+# counts the area of the wall that needs to be painted
 
 # import cv2
+# import numpy as np
 # from ultralytics import YOLO
 
 # model = YOLO("yolov8n-seg.pt")
@@ -16,7 +17,39 @@
 
 #     annotated = results[0].plot()
 
-#     cv2.imshow("Wall Segmentation", annotated)
+#     wall_area_pixels = 0
+#     total_pixels = frame.shape[0] * frame.shape[1]
+
+#     if results[0].masks is not None:
+
+#         for mask, cls in zip(results[0].masks.data, results[0].boxes.cls):
+
+#             label = model.names[int(cls)]
+
+#             if label == "person":  # placeholder
+#                 mask_np = mask.cpu().numpy()
+
+#                 # Resize mask to frame size
+#                 mask_resized = cv2.resize(
+#                     mask_np,
+#                     (frame.shape[1], frame.shape[0])
+#                 )
+
+#                 wall_area_pixels += np.sum(mask_resized > 0.5)
+
+#     wall_percentage = (wall_area_pixels / total_pixels) * 100
+
+#     cv2.putText(
+#         annotated,
+#         f"Paint Area: {wall_percentage:.2f}%",
+#         (20, 40),
+#         cv2.FONT_HERSHEY_SIMPLEX,
+#         1,
+#         (0, 255, 0),
+#         2
+#     )
+
+#     cv2.imshow("Wall Area Estimation", annotated)
 
 #     if cv2.waitKey(1) & 0xFF == ord("q"):
 #         break
@@ -24,51 +57,43 @@
 # cap.release()
 # cv2.destroyAllWindows()
 
-#---------------------------------------------------------------------------
-# counts the area of the wall that needs to be painted
 
 import cv2
 import numpy as np
-from ultralytics import YOLO
+import sys
 
-model = YOLO("yolov8n-seg.pt")
+def process_frame(frame):
 
-cap = cv2.VideoCapture(0)
+    annotated = frame.copy()
 
-while True:
-    ret, frame = cap.read()
-    if not ret:
-        break
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-    results = model(frame)
+    # Detect edges
+    edges = cv2.Canny(gray, 100, 200)
 
-    annotated = results[0].plot()
+    # Smooth edges a bit
+    kernel = np.ones((5, 5), np.uint8)
+    edges = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, kernel)
 
-    wall_area_pixels = 0
     total_pixels = frame.shape[0] * frame.shape[1]
 
-    if results[0].masks is not None:
+    edge_pixels = np.sum(edges > 0)
 
-        for mask, cls in zip(results[0].masks.data, results[0].boxes.cls):
+    # Brick = more edges
+    # Paint = less edges
 
-            label = model.names[int(cls)]
+    unpaint_percentage = (edge_pixels / total_pixels) * 100
+    paint_percentage = 100 - unpaint_percentage
 
-            if label == "person":  # placeholder
-                mask_np = mask.cpu().numpy()
+    # Highlight brick areas (edges)
+    overlay = frame.copy()
+    overlay[edges > 0] = (0, 0, 255)
 
-                # Resize mask to frame size
-                mask_resized = cv2.resize(
-                    mask_np,
-                    (frame.shape[1], frame.shape[0])
-                )
-
-                wall_area_pixels += np.sum(mask_resized > 0.5)
-
-    wall_percentage = (wall_area_pixels / total_pixels) * 100
+    annotated = cv2.addWeighted(overlay, 0.4, frame, 0.6, 0)
 
     cv2.putText(
         annotated,
-        f"Paint Area: {wall_percentage:.2f}%",
+        f"Painted: {paint_percentage:.2f}%",
         (20, 40),
         cv2.FONT_HERSHEY_SIMPLEX,
         1,
@@ -76,10 +101,52 @@ while True:
         2
     )
 
-    cv2.imshow("Wall Area Estimation", annotated)
+    cv2.putText(
+        annotated,
+        f"Unpainted (Brick): {unpaint_percentage:.2f}%",
+        (20, 80),
+        cv2.FONT_HERSHEY_SIMPLEX,
+        1,
+        (0, 0, 255),
+        2
+    )
 
-    if cv2.waitKey(1) & 0xFF == ord("q"):
-        break
+    return annotated
 
-cap.release()
-cv2.destroyAllWindows()
+# -------------------------------------------------
+# CHECK IF IMAGE PATH IS PROVIDED
+# -------------------------------------------------
+
+if len(sys.argv) > 1:
+    # Image mode
+    image_path = sys.argv[1]
+    frame = cv2.imread(image_path)
+
+    if frame is None:
+        print("Error loading image.")
+        sys.exit()
+
+    result = process_frame(frame)
+
+    cv2.imshow("Wall Paint Estimation - Image", result)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+else:
+    # Webcam mode
+    cap = cv2.VideoCapture(0)
+
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            break
+
+        result = process_frame(frame)
+
+        cv2.imshow("Wall Paint Estimation - Live", result)
+
+        if cv2.waitKey(1) & 0xFF == ord("q"):
+            break
+
+    cap.release()
+    cv2.destroyAllWindows()

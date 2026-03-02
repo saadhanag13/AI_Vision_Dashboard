@@ -6,11 +6,13 @@
 # ai_bag_counter.py
 
 import cv2
+import sys
 from ultralytics import YOLO
 
 model = YOLO("yolov8n.pt")
 
-def process_video(source, frame_callback=None):
+
+def process_video(source=0, frame_callback=None):
 
     cap = cv2.VideoCapture(source)
 
@@ -19,12 +21,15 @@ def process_video(source, frame_callback=None):
     track_history = {}
     counted_ids = set()
 
-    line_x = 400
+    line_x = None  # auto adjust
 
     while cap.isOpened():
         ret, frame = cap.read()
         if not ret:
             break
+
+        if line_x is None:
+            line_x = frame.shape[1] // 2
 
         results = model.track(frame, persist=True)
         annotated = results[0].plot()
@@ -48,10 +53,12 @@ def process_video(source, frame_callback=None):
 
                         if track_id not in counted_ids:
 
+                            # Left → Right
                             if prev_x < line_x and center_x >= line_x:
                                 loaded_count += 1
                                 counted_ids.add(track_id)
 
+                            # Right → Left
                             elif prev_x > line_x and center_x <= line_x:
                                 unloaded_count += 1
                                 counted_ids.add(track_id)
@@ -74,7 +81,27 @@ def process_video(source, frame_callback=None):
                     cv2.FONT_HERSHEY_SIMPLEX,
                     1, (0, 0, 255), 2)
 
+        # If using Streamlit later
         if frame_callback:
             frame_callback(annotated, loaded_count, unloaded_count)
+        else:
+            # Standalone mode
+            cv2.imshow("AI Bag Counter", annotated)
+
+            if cv2.waitKey(1) & 0xFF == ord("q"):
+                break
 
     cap.release()
+    cv2.destroyAllWindows()
+
+
+# -----------------------------
+# Standalone Execution Support
+# -----------------------------
+if __name__ == "__main__":
+
+    if len(sys.argv) > 1:
+        video_path = sys.argv[1]
+        process_video(video_path)
+    else:
+        process_video(0)

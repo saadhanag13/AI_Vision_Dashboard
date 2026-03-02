@@ -1,8 +1,14 @@
 # Virtual Environment
 venv/
 
-# Image files
+# Image/video files
 *.jpg
+*.mp4
+*.avi
+*.mov
+
+# Pickle files
+*.pkl
 
 # YOLO model weights
 yolov8n.pt

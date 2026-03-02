@@ -58,53 +58,73 @@ def start_face_auth_camera():
 
     cap = cv2.VideoCapture(0)
 
+    # FAST detector
+    face_cascade = cv2.CascadeClassifier(
+        cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
+    )
+
+    frame_count = 0
+    last_label = "Detecting..."
+    last_color = (255, 255, 0)
+
     while True:
         ret, frame = cap.read()
         if not ret:
             break
 
-        try:
-            results = DeepFace.represent(
-                img_path=frame,
-                model_name=MODEL_NAME,
-                detector_backend=DETECTOR,
-                enforce_detection=False
-            )
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-            for face in results:
+        # FAST detection
+        faces = face_cascade.detectMultiScale(
+            gray,
+            scaleFactor=1.3,
+            minNeighbors=5
+        )
 
-                embedding = face["embedding"]
-                facial_area = face["facial_area"]
+        frame_count += 1
 
-                similarity = cosine_similarity(
-                    embedding,
-                    known_embedding
-                )
+        for (x, y, w, h) in faces:
 
-                percentage = round(similarity * 100, 2)
+            # Only run DeepFace every 10 frames
+            if frame_count % 10 == 0:
 
-                if similarity >= THRESHOLD:
-                    label = f"Authorized - {percentage}%"
-                    color = (0, 255, 0)
-                else:
-                    label = f"Unknown - {percentage}%"
-                    color = (0, 0, 255)
+                face_crop = frame[y:y+h, x:x+w]
 
-                x = facial_area["x"]
-                y = facial_area["y"]
-                w = facial_area["w"]
-                h = facial_area["h"]
+                try:
+                    result = DeepFace.represent(
+                        img_path=face_crop,
+                        model_name=MODEL_NAME,
+                        detector_backend="skip",
+                        enforce_detection=False
+                    )
 
-                cv2.rectangle(frame, (x, y),
-                              (x+w, y+h), color, 2)
+                    embedding = normalize(result[0]["embedding"])
 
-                cv2.putText(frame, label,
-                            (x, y-10),
-                            cv2.FONT_HERSHEY_SIMPLEX,
-                            0.8, color, 2)
+                    similarity = cosine_similarity(
+                        embedding,
+                        known_embedding
+                    )
 
-        except Exception as e:
-            print("Error:", e)
+                    percentage = round(similarity * 100, 2)
+
+                    if similarity >= THRESHOLD:
+                        last_label = f"Authorized - {percentage}%"
+                        last_color = (0, 255, 0)
+                    else:
+                        last_label = f"Unknown - {percentage}%"
+                        last_color = (0, 0, 255)
+
+                except Exception:
+                    pass
+
+            # Draw always (smooth UI)
+            cv2.rectangle(frame, (x, y), (x+w, y+h), last_color, 2)
+            cv2.putText(frame, last_label,
+                        (x, y-10),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        0.8,
+                        last_color,
+                        2)
 
         cv2.imshow("Face Authentication", frame)
 

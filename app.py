@@ -112,22 +112,27 @@ if feature == "Wall Area Estimation":
             subprocess.run([sys.executable, "wall_area.py"])
 
     # -------------------------
-    # RIGHT - Upload Video
+    # RIGHT - Upload Image
     # -------------------------
     with col2:
-        st.subheader("🟢 Upload Video for Testing")
+        st.subheader("🟢 Upload Image for Testing")
 
-        uploaded_video = st.file_uploader(
-            "Upload Wall Video",
-            type=["mp4", "avi", "mov"]
+        uploaded_image = st.file_uploader(
+            "Upload Wall Image",
+            type=["jpg", "jpeg", "png"]
         )
 
-        if uploaded_video is not None:
+        if uploaded_image is not None:
 
-            temp_file = tempfile.NamedTemporaryFile(delete=False)
-            temp_file.write(uploaded_video.read())
+            temp_file = tempfile.NamedTemporaryFile(
+                delete=False,
+                suffix=".jpg"
+            )
+            temp_file.write(uploaded_image.read())
 
-            if st.button("Process Uploaded Video"):
+            st.image(uploaded_image, caption="Uploaded Image", width="stretch")
+
+            if st.button("Process Uploaded Image"):
                 subprocess.run([
                     sys.executable,
                     "wall_area.py",
