@@ -29,11 +29,14 @@
 ---
 
 ### Wall Area Estimation
-- Uses segmentation model
-- Calculates detected area percentage
+- Uses Color / Texture-based processing (HSV / texture analysis)
+- Detects painted vs unpainted surface
+- Calculates:
+  - Painted Area %
+  - Unpainted Area %
 - Supports:
   - Live Camera
-  - Uploaded Video
+  - Uploaded Image
 
 ---
 
